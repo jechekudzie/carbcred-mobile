@@ -8,7 +8,7 @@ import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
 import { MoreNavigator } from './MoreNavigator';
-import { SitesNavigator } from './SitesNavigator';
+import { RiversNavigator } from './RiversNavigator';
 import { ProjectsNavigator } from './ProjectsNavigator';
 
 const Tab = createBottomTabNavigator();
@@ -70,9 +70,10 @@ export function MainTabNavigator() {
         />
       ) : null}
 
+      {/* River → Project → Site → its logs, walked in that order. */}
       <Tab.Screen
-        name="Sites"
-        component={SitesNavigator}
+        name="Rivers"
+        component={RiversNavigator}
         options={{ tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} /> }}
       />
 

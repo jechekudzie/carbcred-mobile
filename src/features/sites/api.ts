@@ -10,6 +10,8 @@ export type SiteRow = {
   project: string | null;
   operator: string | null;
   project_id: number | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type Mobilization = {
@@ -45,8 +47,6 @@ export type SiteOperations = {
 };
 
 export type SiteDetail = SiteRow & {
-  latitude: number | null;
-  longitude: number | null;
   area_hectares: number | null;
   length_km: number | null;
   permits: { id: number; type: string; reference: string | null; issuing_authority: string | null; expires_on: string | null }[];
@@ -55,8 +55,22 @@ export type SiteDetail = SiteRow & {
   verify_url: string;
 };
 
-export async function fetchSites(organisationSlug: string): Promise<SiteRow[]> {
-  return (await api.get<{ data: SiteRow[] }>(`/organisations/${organisationSlug}/sites`)).data.data;
+/**
+ * Sites, optionally narrowed to a step of the hierarchy — one river's, or one
+ * project's. The server does the narrowing; the phone does not fetch the lot.
+ */
+export async function fetchSites(
+  organisationSlug: string,
+  filters: { riverId?: number; projectId?: number } = {},
+): Promise<SiteRow[]> {
+  const { data } = await api.get<{ data: SiteRow[] }>(`/organisations/${organisationSlug}/sites`, {
+    params: {
+      ...(filters.riverId ? { river_id: filters.riverId } : {}),
+      ...(filters.projectId ? { project_id: filters.projectId } : {}),
+    },
+  });
+
+  return data.data;
 }
 
 /** Everything about one site in a single call — the whole operations picture. */

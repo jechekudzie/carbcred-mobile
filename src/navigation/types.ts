@@ -10,17 +10,26 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Projects: undefined;
-  Sites: undefined;
+  Rivers: undefined;
   Engagements: undefined;
   Capture: undefined;
   Tasks: undefined;
   More: undefined;
 };
 
-export type SitesStackParamList = {
-  SitesList: undefined;
+/**
+ * The browse stack follows the platform's own hierarchy:
+ * River → its sites → one site → the logs kept at that site.
+ */
+export type RiversStackParamList = {
+  RiversList: undefined;
+  RiverMap: undefined;
+  RiverSites: { riverId: number; name: string };
   SiteDetail: { siteId: number; name: string };
+  SiteLog: { siteId: number; siteName: string; kind: SiteLogKind };
 };
+
+export type SiteLogKind = 'wash-reading' | 'attendance' | 'inspection' | 'complaint';
 
 export type CaptureStackParamList = {
   CaptureMenu: undefined;

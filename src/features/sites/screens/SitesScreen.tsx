@@ -3,25 +3,30 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BrandScreen } from '@shared/components/BrandScreen';
-import type { SitesStackParamList } from '@navigation/types';
+import type { RiversStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchSites, type SiteRow } from '../api';
 
-type Props = NativeStackScreenProps<SitesStackParamList, 'SitesList'>;
+type Props = NativeStackScreenProps<RiversStackParamList, 'RiverSites'>;
 
-export function SitesScreen({ navigation }: Props) {
+/** The sites on one river — the middle of River → Project → Site. */
+export function SitesScreen({ navigation, route }: Props) {
   const { scheme } = useTheme();
   const slug = useAuthStore((state) => state.organisationSlug);
+  const { riverId, name } = route.params;
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['sites', slug],
-    queryFn: () => fetchSites(slug!),
+    queryKey: ['sites', slug, riverId],
+    queryFn: () => fetchSites(slug!, { riverId }),
     enabled: Boolean(slug),
   });
 
   return (
-    <BrandScreen title="Sites" subtitle={data ? `${data.length} in reach` : undefined}>
+    <BrandScreen
+      title={`${name} River`}
+      subtitle={data ? `${data.length} ${data.length === 1 ? 'site' : 'sites'} in reach` : undefined}
+    >
       <ScrollView
         contentContainerStyle={{ gap: 12, paddingVertical: 18 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={scheme.textMuted} />}
@@ -48,8 +53,11 @@ export function SitesScreen({ navigation }: Props) {
               <Text style={{ color: scheme.textMuted, fontSize: 13 }}>
                 {[site.code, site.river, site.status].filter(Boolean).join(' · ')}
               </Text>
-              {site.operator ? (
-                <Text style={{ color: scheme.textMuted, fontSize: 12 }}>Operated by {site.operator}</Text>
+              {site.project ? (
+                <Text style={{ color: scheme.textMuted, fontSize: 12 }}>
+                  {site.project}
+                  {site.operator ? ` · ${site.operator}` : ''}
+                </Text>
               ) : null}
             </View>
             <ChevronRight color={scheme.textMuted} size={20} />
@@ -58,7 +66,7 @@ export function SitesScreen({ navigation }: Props) {
 
         {data?.length === 0 ? (
           <Text style={{ color: scheme.textMuted, fontSize: 14 }}>
-            No sites are in reach of this organisation yet.
+            No sites on this river are in reach of your organisation.
           </Text>
         ) : null}
       </ScrollView>

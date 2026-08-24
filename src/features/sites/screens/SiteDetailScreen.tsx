@@ -1,26 +1,36 @@
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Circle } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BarChart } from '@shared/components/BarChart';
 import { BrandScreen } from '@shared/components/BrandScreen';
-import type { SitesStackParamList } from '@navigation/types';
+import type { RiversStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
 import { fetchSite, MOBILIZATION_STEPS, type Mobilization } from '../api';
+import type { SiteLogKind } from '@navigation/types';
 
-type Props = NativeStackScreenProps<SitesStackParamList, 'SiteDetail'>;
+const LOGS: { kind: SiteLogKind; label: string }[] = [
+  { kind: 'wash-reading', label: 'Daily wash' },
+  { kind: 'attendance', label: 'Attendance' },
+  { kind: 'inspection', label: 'Inspection' },
+  { kind: 'complaint', label: 'Complaint' },
+];
+
+type Props = NativeStackScreenProps<RiversStackParamList, 'SiteDetail'>;
 
 /**
  * Everything happening at one site, in the order it matters on the ground:
  * is it mobilised, is it guarded, who is here today, is it washing, has the
  * regulator been, and is anyone complaining.
  */
-export function SiteDetailScreen({ route }: Props) {
+export function SiteDetailScreen({ route, navigation }: Props) {
   const { scheme } = useTheme();
   const slug = useAuthStore((state) => state.organisationSlug);
   const { siteId, name } = route.params;
+  const can = useAuthStore((state) => state.can);
+  const canLog = can('edit-projects') || can('edit-contractors') || can('edit-field');
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['site', slug, siteId],
@@ -48,6 +58,27 @@ export function SiteDetailScreen({ route }: Props) {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={scheme.textMuted} />}
       >
         {isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
+
+        {/* Logging starts from the site, because that is what these are: logs
+            kept at a place, not forms floating in the app. */}
+        {canLog ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {LOGS.map((log) => (
+              <Pressable
+                key={log.kind}
+                onPress={() => navigation.navigate('SiteLog', { siteId, siteName: name, kind: log.kind })}
+                style={{
+                  backgroundColor: brand.deepLeaf,
+                  borderRadius: 10,
+                  paddingVertical: 10,
+                  paddingHorizontal: 14,
+                }}
+              >
+                <Text style={{ color: brand.cream, fontSize: 14, fontWeight: '600' }}>{log.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         {ops ? (
           <>
