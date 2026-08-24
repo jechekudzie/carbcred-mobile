@@ -1,10 +1,11 @@
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Circle, CircleDot } from 'lucide-react-native';
+import { Check, ChevronRight, Circle, CircleDot, MessageSquare } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@shared/components/Screen';
 import type { MoreStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
+import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
 import { fetchProject, phaseProgress, type Workflow, type WorkflowPhase, type WorkflowTask } from '../api';
 
@@ -15,7 +16,7 @@ type Props = NativeStackScreenProps<MoreStackParamList, 'ProjectDetail'>;
  * inside the phase currently in progress, the tasks it is actually waiting on.
  * Completed phases collapse to a line — the useful question is what is next.
  */
-export function ProjectDetailScreen({ route }: Props) {
+export function ProjectDetailScreen({ route, navigation }: Props) {
   const { scheme } = useTheme();
   const organisationSlug = useAuthStore((state) => state.organisationSlug);
   const { slug, name } = route.params;
@@ -46,6 +47,24 @@ export function ProjectDetailScreen({ route }: Props) {
         </View>
 
         {isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
+
+        <Pressable
+          onPress={() => navigation.navigate('Discussion', { projectSlug: slug, name })}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: scheme.surface,
+            borderColor: scheme.border,
+            borderWidth: 1,
+            borderRadius: 14,
+            padding: 14,
+          }}
+        >
+          <MessageSquare color={brand.deepLeaf} size={20} />
+          <Text style={{ color: scheme.text, fontSize: 15, fontWeight: '600', flex: 1 }}>Discussion</Text>
+          <ChevronRight color={scheme.textMuted} size={18} />
+        </Pressable>
 
         {data?.workflow ? (
           <>

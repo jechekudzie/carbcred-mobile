@@ -1,5 +1,5 @@
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { Building2, ChevronRight, FolderKanban, HardHat, LogOut, Phone, ShieldCheck, Ticket } from 'lucide-react-native';
+import { BadgeCheck, Building2, ChevronRight, FolderKanban, HardHat, LogOut, Phone, ShieldCheck, Ticket } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { logout } from '@features/auth/api';
 import { BrandScreen } from '@shared/components/BrandScreen';
@@ -84,12 +84,20 @@ export function MoreScreen({ navigation }: Props) {
           />
         ) : null}
         {seesEngagements ? (
-          <Row
-            icon={<HardHat color={brand.deepLeaf} size={20} />}
-            label="My projects"
-            hint="Contracts and the sites you operate"
-            onPress={() => navigation.navigate('Engagements')}
-          />
+          <>
+            <Row
+              icon={<HardHat color={brand.deepLeaf} size={20} />}
+              label="My projects"
+              hint="Contracts and the sites you operate"
+              onPress={() => navigation.navigate('Engagements')}
+            />
+            <Row
+              icon={<BadgeCheck color={brand.deepLeaf} size={20} />}
+              label="Onboarding"
+              hint="Approval, due diligence, documents to sign"
+              onPress={() => navigation.navigate('Onboarding')}
+            />
+          </>
         ) : null}
         <Row
           icon={<Ticket color={brand.deepLeaf} size={20} />}

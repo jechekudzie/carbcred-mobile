@@ -10,7 +10,8 @@ export type CaptureKind =
   | 'wash-reading'
   | 'attendance'
   | 'inspection'
-  | 'complaint';
+  | 'complaint'
+  | 'message';
 
 export type SubmissionType = 'planting' | 'survival' | 'monitoring' | 'incident';
 
@@ -36,4 +37,5 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   attendance: 'Attendance',
   inspection: 'Inspection',
   complaint: 'Complaint',
+  message: 'Message',
 };
