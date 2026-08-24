@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Circle } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -296,6 +296,61 @@ export function SiteDetailScreen({ route, navigation }: Props) {
                 ))
               ) : (
                 <Empty>Nothing reported.</Empty>
+              )}
+            </Section>
+
+            {data.verify_url && canLog ? (
+              <Pressable
+                onPress={() => Linking.openURL(data.verify_url)}
+                style={{
+                  backgroundColor: scheme.surface,
+                  borderColor: scheme.border,
+                  borderWidth: 1,
+                  borderRadius: 14,
+                  padding: 14,
+                  gap: 3,
+                }}
+              >
+                <Text style={{ color: scheme.text, fontSize: 14, fontWeight: '600' }}>
+                  Public verification page
+                </Text>
+                <Text style={{ color: scheme.textMuted, fontSize: 12 }}>
+                  What anyone scanning this site's board sees — permits and inspection record, nothing else.
+                </Text>
+              </Pressable>
+            ) : null}
+
+            <Section title="Permits" count={data.permits.length}>
+              {data.permits.length ? (
+                data.permits.map((permit) => {
+                  const expired = permit.expires_on !== null && permit.expires_on < sorted.today;
+
+                  return (
+                    <View key={permit.id} style={{ gap: 2 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ color: scheme.text, fontSize: 14, fontWeight: '600', flex: 1 }}>
+                          {permit.type}
+                        </Text>
+                        <Text
+                          style={{
+                            color: expired ? scheme.danger : brand.deepLeaf,
+                            fontSize: 11,
+                            fontWeight: '700',
+                          }}
+                        >
+                          {expired ? 'EXPIRED' : 'VALID'}
+                        </Text>
+                      </View>
+                      <Text style={{ color: scheme.textMuted, fontSize: 12 }}>
+                        {[permit.reference, permit.issuing_authority, permit.expires_on ? `to ${permit.expires_on}` : null]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Text>
+                    </View>
+                  );
+                })
+              ) : (
+                <Empty>No permits on record.</Empty>
               )}
             </Section>
 

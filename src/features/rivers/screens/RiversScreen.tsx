@@ -4,7 +4,10 @@ import { ChevronRight, Map } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BrandScreen } from '@shared/components/BrandScreen';
 import type { RiversStackParamList } from '@navigation/types';
+import { useAuthStore } from '@stores/authStore';
+import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
+import { fetchSites } from '@features/sites/api';
 import { fetchRivers, type River } from '../api';
 
 type Props = NativeStackScreenProps<RiversStackParamList, 'RiversList'>;
@@ -18,11 +21,22 @@ type Props = NativeStackScreenProps<RiversStackParamList, 'RiversList'>;
 export function RiversScreen({ navigation }: Props) {
   const { scheme } = useTheme();
 
+  const slug = useAuthStore((state) => state.organisationSlug);
+
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['rivers'],
     queryFn: fetchRivers,
     staleTime: 24 * 60 * 60 * 1000,
   });
+
+  const sites = useQuery({
+    queryKey: ['sites', slug, 'all'],
+    queryFn: () => fetchSites(slug!),
+    enabled: Boolean(slug),
+  });
+
+  const allocated = sites.data?.filter((site) => site.operator).length ?? 0;
+  const unallocated = (sites.data?.length ?? 0) - allocated;
 
   return (
     <BrandScreen title="Rivers" subtitle={data ? `${data.length} approved reaches` : undefined}>
@@ -31,6 +45,13 @@ export function RiversScreen({ navigation }: Props) {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={scheme.textMuted} />}
       >
         {isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
+
+        {sites.data ? (
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Count label="Allocated" value={allocated} colour={brand.deepLeaf} />
+            <Count label="Not yet allocated" value={unallocated} colour="#f5a524" />
+          </View>
+        ) : null}
 
         <Pressable
           onPress={() => navigation.navigate('RiverMap')}
@@ -105,5 +126,28 @@ export function RiversScreen({ navigation }: Props) {
         </Pressable>
       </ScrollView>
     </BrandScreen>
+  );
+}
+
+/** A programme-wide allocation count, in the colour that state uses everywhere. */
+function Count({ label, value, colour }: { label: string; value: number; colour: string }) {
+  const { scheme } = useTheme();
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: scheme.surface,
+        borderColor: colour,
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        gap: 1,
+      }}
+    >
+      <Text style={{ color: colour, fontSize: 20, fontWeight: '700' }}>{value}</Text>
+      <Text style={{ color: scheme.textMuted, fontSize: 12 }}>{label}</Text>
+    </View>
   );
 }

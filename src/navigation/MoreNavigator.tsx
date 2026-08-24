@@ -5,6 +5,9 @@ import { ProjectsScreen } from '@features/projects/screens/ProjectsScreen';
 import { EmergencyScreen } from '@features/more/screens/EmergencyScreen';
 import { MoreScreen } from '@features/more/screens/MoreScreen';
 import { OrganisationScreen } from '@features/more/screens/OrganisationScreen';
+import { LogTicketScreen } from '@features/tickets/screens/LogTicketScreen';
+import { TicketDetailScreen } from '@features/tickets/screens/TicketDetailScreen';
+import { TicketsScreen } from '@features/tickets/screens/TicketsScreen';
 import { VerifyScreen } from '@features/more/screens/VerifyScreen';
 import type { MoreStackParamList } from './types';
 
@@ -15,6 +18,9 @@ export function MoreNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MoreMenu" component={MoreScreen} />
       <Stack.Screen name="Organisation" component={OrganisationScreen} />
+      <Stack.Screen name="Tickets" component={TicketsScreen} />
+      <Stack.Screen name="TicketDetail" component={TicketDetailScreen} />
+      <Stack.Screen name="LogTicket" component={LogTicketScreen} />
       <Stack.Screen name="Emergency" component={EmergencyScreen} />
       <Stack.Screen name="Verify" component={VerifyScreen} />
       <Stack.Screen name="Engagements" component={EngagementsScreen} />
