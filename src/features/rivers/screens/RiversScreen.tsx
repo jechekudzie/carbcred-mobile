@@ -79,6 +79,30 @@ export function RiversScreen({ navigation }: Props) {
             <ChevronRight color={scheme.textMuted} size={20} />
           </Pressable>
         ))}
+        {/* A site not yet on an approved river would otherwise be invisible
+            from here — the web view groups them as "Not yet on an approved
+            river"; this is the same promise, reached from one entry. */}
+        <Pressable
+          onPress={() => navigation.navigate('RiverSites', {})}
+          style={{
+            backgroundColor: scheme.surface,
+            borderColor: scheme.border,
+            borderWidth: 1,
+            borderRadius: 14,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: scheme.text, fontSize: 16, fontWeight: '600' }}>All sites</Text>
+            <Text style={{ color: scheme.textMuted, fontSize: 13 }}>
+              Including any not yet on an approved river
+            </Text>
+          </View>
+          <ChevronRight color={scheme.textMuted} size={20} />
+        </Pressable>
       </ScrollView>
     </BrandScreen>
   );

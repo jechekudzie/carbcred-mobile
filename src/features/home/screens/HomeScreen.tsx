@@ -87,7 +87,7 @@ export function HomeScreen({ navigation }: { navigation: { navigate: (screen: st
             <CardTitle
               title="Process"
               hint={`${Math.round((project.phases.done / Math.max(project.phases.total, 1)) * 100)}%`}
-              onPress={() => navigation.navigate('Projects')}
+              onPress={() => navigation.navigate('More')}
             />
             <View style={{ height: 8, borderRadius: 4, backgroundColor: scheme.border, overflow: 'hidden' }}>
               <View

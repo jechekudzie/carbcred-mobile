@@ -17,14 +17,14 @@ export function SitesScreen({ navigation, route }: Props) {
   const { riverId, name } = route.params;
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ['sites', slug, riverId],
-    queryFn: () => fetchSites(slug!, { riverId }),
+    queryKey: ['sites', slug, riverId ?? 'all'],
+    queryFn: () => fetchSites(slug!, riverId ? { riverId } : {}),
     enabled: Boolean(slug),
   });
 
   return (
     <BrandScreen
-      title={`${name} River`}
+      title={name ? `${name} River` : 'All sites'}
       subtitle={data ? `${data.length} ${data.length === 1 ? 'site' : 'sites'} in reach` : undefined}
     >
       <ScrollView
@@ -66,7 +66,9 @@ export function SitesScreen({ navigation, route }: Props) {
 
         {data?.length === 0 ? (
           <Text style={{ color: scheme.textMuted, fontSize: 14 }}>
-            No sites on this river are in reach of your organisation.
+            {name
+              ? 'No sites on this river are in reach of your organisation.'
+              : 'No sites are in reach of your organisation.'}
           </Text>
         ) : null}
       </ScrollView>

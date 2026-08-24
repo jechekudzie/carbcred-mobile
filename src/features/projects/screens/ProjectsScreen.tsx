@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BrandScreen } from '@shared/components/BrandScreen';
-import type { ProjectsStackParamList } from '@navigation/types';
+import type { MoreStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchProjects, type ProjectSummary } from '../api';
 
-type Props = NativeStackScreenProps<ProjectsStackParamList, 'ProjectsList'>;
+type Props = NativeStackScreenProps<MoreStackParamList, 'Projects'>;
 
 export function ProjectsScreen({ navigation }: Props) {
   const { scheme } = useTheme();

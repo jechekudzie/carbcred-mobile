@@ -1,5 +1,5 @@
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { ChevronRight, HardHat, LogOut, Phone, ShieldCheck } from 'lucide-react-native';
+import { ChevronRight, FolderKanban, HardHat, LogOut, Phone, ShieldCheck } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { logout } from '@features/auth/api';
 import { BrandScreen } from '@shared/components/BrandScreen';
@@ -18,7 +18,8 @@ export function MoreScreen({ navigation }: Props) {
   const organisation = useAuthStore((state) => state.currentOrganisation)();
   const can = usePermissions();
   // Both jobs at once: the tab shows delivery, so engagements live here.
-  const canSeeEngagements = can('view-contractors') && can('view-projects');
+  const seesDelivery = can('view-projects');
+  const seesEngagements = can('view-contractors');
 
   const confirmSignOut = () => {
     Alert.alert('Sign out', 'Anything still queued on this phone stays queued until you sign back in.', [
@@ -63,10 +64,18 @@ export function MoreScreen({ navigation }: Props) {
           ) : null}
         </View>
 
-        {canSeeEngagements ? (
+        {seesDelivery ? (
+          <Row
+            icon={<FolderKanban color={brand.deepLeaf} size={20} />}
+            label="Projects"
+            hint="The delivery pipeline and its workflow"
+            onPress={() => navigation.navigate('Projects')}
+          />
+        ) : null}
+        {seesEngagements ? (
           <Row
             icon={<HardHat color={brand.deepLeaf} size={20} />}
-            label="My engagements"
+            label="My projects"
             hint="Contracts and the sites you operate"
             onPress={() => navigation.navigate('Engagements')}
           />

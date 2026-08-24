@@ -1,5 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { EngagementsScreen } from '@features/engagements/screens/EngagementsScreen';
+import { ProjectDetailScreen } from '@features/projects/screens/ProjectDetailScreen';
+import { ProjectsScreen } from '@features/projects/screens/ProjectsScreen';
 import { EmergencyScreen } from '@features/more/screens/EmergencyScreen';
 import { MoreScreen } from '@features/more/screens/MoreScreen';
 import { VerifyScreen } from '@features/more/screens/VerifyScreen';
@@ -14,6 +16,8 @@ export function MoreNavigator() {
       <Stack.Screen name="Emergency" component={EmergencyScreen} />
       <Stack.Screen name="Verify" component={VerifyScreen} />
       <Stack.Screen name="Engagements" component={EngagementsScreen} />
+      <Stack.Screen name="Projects" component={ProjectsScreen} />
+      <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
     </Stack.Navigator>
   );
 }

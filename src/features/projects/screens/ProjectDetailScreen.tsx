@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, Circle, CircleDot } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen } from '@shared/components/Screen';
-import type { ProjectsStackParamList } from '@navigation/types';
+import type { MoreStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchProject, phaseProgress, type Workflow, type WorkflowPhase, type WorkflowTask } from '../api';
 
-type Props = NativeStackScreenProps<ProjectsStackParamList, 'ProjectDetail'>;
+type Props = NativeStackScreenProps<MoreStackParamList, 'ProjectDetail'>;
 
 /**
  * Where a project has got to, as the platform sees it: the phase stepper, and

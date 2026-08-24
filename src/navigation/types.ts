@@ -9,9 +9,7 @@ export type AuthStackParamList = {
  */
 export type MainTabParamList = {
   Home: undefined;
-  Projects: undefined;
   Rivers: undefined;
-  Engagements: undefined;
   Capture: undefined;
   Tasks: undefined;
   More: undefined;
@@ -24,7 +22,7 @@ export type MainTabParamList = {
 export type RiversStackParamList = {
   RiversList: undefined;
   RiverMap: undefined;
-  RiverSites: { riverId: number; name: string };
+  RiverSites: { riverId?: number; name?: string };
   SiteDetail: { siteId: number; name: string };
   SiteLog: { siteId: number; siteName: string; kind: SiteLogKind };
 };
@@ -42,9 +40,6 @@ export type MoreStackParamList = {
   Emergency: undefined;
   Verify: undefined;
   Engagements: undefined;
-};
-
-export type ProjectsStackParamList = {
-  ProjectsList: undefined;
+  Projects: undefined;
   ProjectDetail: { slug: string; name: string };
 };
