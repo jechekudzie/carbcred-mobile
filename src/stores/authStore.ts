@@ -1,7 +1,10 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 
 const TOKEN_KEY = 'carbcred.token';
+/** Not a secret — which organisation this handset was last working in. */
+const ORGANISATION_KEY = 'carbcred.organisation';
 
 export type Organisation = {
   id: number;
@@ -20,6 +23,8 @@ export type AuthUser = {
   platform_role_label: string | null;
   is_super_admin: boolean;
   must_change_password: boolean;
+  /** Whether the organisations list is the platform's or only this user's. */
+  sees_every_organisation?: boolean;
 };
 
 type AuthState = {
@@ -33,7 +38,7 @@ type AuthState = {
   passwordChangeRequired: boolean;
 
   restore: () => Promise<void>;
-  hydrate: (user: AuthUser, organisations: Organisation[]) => void;
+  hydrate: (user: AuthUser, organisations: Organisation[]) => Promise<void>;
   signIn: (payload: {
     token: string;
     user: AuthUser;
@@ -63,15 +68,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   /** Fill in who the token belongs to, once something has asked the server. */
-  hydrate: (user, organisations) =>
+  hydrate: async (user, organisations) => {
+    // Someone who switched away from their home organisation meant it, so the
+    // choice outlives the app being closed — but only while it is still a
+    // choice they have.
+    const remembered = await AsyncStorage.getItem(ORGANISATION_KEY);
+    const stillReachable = organisations.some((organisation) => organisation.slug === remembered);
+
     set({
       user,
       organisations,
       organisationSlug:
+        (stillReachable ? remembered : null) ??
         organisations.find((organisation) => organisation.is_primary)?.slug ??
         organisations[0]?.slug ??
         null,
-    }),
+    });
+  },
 
   signIn: async ({ token, user, organisations, passwordChangeRequired = false }) => {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
@@ -91,6 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
+    await AsyncStorage.removeItem(ORGANISATION_KEY);
 
     set({
       token: null,
@@ -101,7 +115,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  setOrganisation: (slug) => set({ organisationSlug: slug }),
+  setOrganisation: (slug) => {
+    void AsyncStorage.setItem(ORGANISATION_KEY, slug);
+    set({ organisationSlug: slug });
+  },
 
   currentOrganisation: () => {
     const { organisations, organisationSlug } = get();

@@ -1,5 +1,5 @@
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import { ChevronRight, FolderKanban, HardHat, LogOut, Phone, ShieldCheck } from 'lucide-react-native';
+import { Building2, ChevronRight, FolderKanban, HardHat, LogOut, Phone, ShieldCheck } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { logout } from '@features/auth/api';
 import { BrandScreen } from '@shared/components/BrandScreen';
@@ -18,6 +18,7 @@ export function MoreScreen({ navigation }: Props) {
   const organisation = useAuthStore((state) => state.currentOrganisation)();
   const can = usePermissions();
   // Both jobs at once: the tab shows delivery, so engagements live here.
+  const organisations = useAuthStore((state) => state.organisations);
   const seesDelivery = can('view-projects');
   const seesEngagements = can('view-contractors');
 
@@ -63,6 +64,16 @@ export function MoreScreen({ navigation }: Props) {
             </Text>
           ) : null}
         </View>
+
+        {/* Only worth a row when there is a choice to make. */}
+        {organisations.length > 1 ? (
+          <Row
+            icon={<Building2 color={brand.deepLeaf} size={20} />}
+            label="Organisation"
+            hint={organisation?.name ?? 'Choose where you are working'}
+            onPress={() => navigation.navigate('Organisation')}
+          />
+        ) : null}
 
         {seesDelivery ? (
           <Row

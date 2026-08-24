@@ -40,6 +40,7 @@ export type MoreStackParamList = {
   Emergency: undefined;
   Verify: undefined;
   Engagements: undefined;
+  Organisation: undefined;
   Projects: undefined;
   ProjectDetail: { slug: string; name: string };
 };

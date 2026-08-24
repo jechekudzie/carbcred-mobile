@@ -27,7 +27,7 @@ export function useSession() {
         const { data } = await api.get<{ data: { user: AuthUser; organisations: Organisation[] } }>('/me');
 
         if (!cancelled) {
-          hydrate(data.data.user, data.data.organisations);
+          await hydrate(data.data.user, data.data.organisations);
         }
       } catch {
         // A dead token is handled by the client's 401 interceptor, which signs
