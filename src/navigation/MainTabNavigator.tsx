@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, MoreHorizontal, Plus } from 'lucide-react-native';
 import { Text, View } from 'react-native';
+import { CaptureScreen } from '@features/capture/screens/CaptureScreen';
 import { HomeScreen } from '@features/home/screens/HomeScreen';
 import { Screen } from '@shared/components/Screen';
 import { useTheme } from '@theme/useTheme';
@@ -41,10 +42,9 @@ export function MainTabNavigator() {
       />
       <Tab.Screen
         name="Capture"
+        component={CaptureScreen}
         options={{ tabBarIcon: ({ color, size }) => <Plus color={color} size={size} /> }}
-      >
-        {() => <ComingSoon title="Capture" />}
-      </Tab.Screen>
+      />
       <Tab.Screen
         name="More"
         options={{ tabBarIcon: ({ color, size }) => <MoreHorizontal color={color} size={size} /> }}

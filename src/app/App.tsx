@@ -6,11 +6,24 @@ import * as SplashScreen from 'expo-splash-screen';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { persister, queryClient } from '@api/queryClient';
 import { RootNavigator } from '@navigation/RootNavigator';
+import { useCaptureSync } from '@features/capture/useCaptureSync';
+import { useQueueStore } from '@features/capture/queue';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import '../global.css';
 
 void SplashScreen.preventAutoHideAsync();
+
+/**
+ * Drains the capture queue for as long as the app is open, wherever the officer
+ * happens to be in it. Rendered inside the query provider because the sync
+ * invalidates queries when something files.
+ */
+function Sync() {
+  useCaptureSync();
+
+  return null;
+}
 
 export default function App() {
   const restore = useAuthStore((state) => state.restore);
@@ -19,6 +32,7 @@ export default function App() {
 
   useEffect(() => {
     void restore();
+    void useQueueStore.getState().hydrate();
   }, [restore]);
 
   useEffect(() => {
@@ -38,6 +52,7 @@ export default function App() {
       <SafeAreaProvider>
         <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
+          <Sync />
           <RootNavigator />
         </PersistQueryClientProvider>
       </SafeAreaProvider>

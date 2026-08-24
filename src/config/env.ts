@@ -1,12 +1,18 @@
 /**
  * Where the app talks to.
  *
- * Local development runs against Herd over plain http: the .test certificate is
- * self-signed, which a simulator will not trust, and iOS App Transport Security
- * blocks it before the request leaves the app. The live test server is https and
- * needs no exception, so device testing uses that.
+ * Development points at the machine's LAN address rather than Herd's
+ * `carbcred-system.test`: a simulator can resolve a .test host through the Mac's
+ * resolver, but a real handset on the same wifi cannot, and the first time this
+ * app runs on a physical phone is not the moment to discover that. The LAN
+ * address works for both.
+ *
+ * Override without touching code by setting EXPO_PUBLIC_API_URL before starting
+ * Metro — necessary whenever the machine's IP changes, which it will.
+ *
+ *   EXPO_PUBLIC_API_URL=http://192.168.1.50:8000 npx expo start
  */
-const LOCAL_API = 'http://carbcred-system.test';
+const LOCAL_API = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.100.117:8000';
 const TEST_SERVER_API = 'https://carbcred-system.on-forge.com';
 
 export const API_BASE_URL = __DEV__ ? LOCAL_API : TEST_SERVER_API;
