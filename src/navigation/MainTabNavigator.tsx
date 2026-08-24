@@ -47,6 +47,13 @@ export function MainTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
       />
 
+      {/* River → Project → Site → its logs, walked in that order. */}
+      <Tab.Screen
+        name="Rivers"
+        component={RiversNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} /> }}
+      />
+
       {captures ? (
         <Tab.Screen
           name="Capture"
