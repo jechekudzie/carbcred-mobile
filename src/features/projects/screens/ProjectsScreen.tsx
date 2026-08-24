@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } 
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Screen } from '@shared/components/Screen';
+import { BrandScreen } from '@shared/components/BrandScreen';
 import type { ProjectsStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
@@ -21,13 +21,11 @@ export function ProjectsScreen({ navigation }: Props) {
   });
 
   return (
-    <Screen>
+    <BrandScreen title="Projects" subtitle={data ? `${data.length} in ${organisationSlug ?? "this organisation"}` : undefined}>
       <ScrollView
         contentContainerStyle={{ gap: 14, paddingVertical: 20 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={scheme.textMuted} />}
       >
-        <Text style={{ color: scheme.text, fontSize: 26, fontWeight: '700' }}>Projects</Text>
-
         {isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
 
         {data?.map((project: ProjectSummary) => (
@@ -61,6 +59,6 @@ export function ProjectsScreen({ navigation }: Props) {
           </Text>
         ) : null}
       </ScrollView>
-    </Screen>
+    </BrandScreen>
   );
 }

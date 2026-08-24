@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react-native';
 import { Button } from '@shared/components/Button';
-import { Screen } from '@shared/components/Screen';
+import { BrandScreen } from '@shared/components/BrandScreen';
 import { TextField } from '@shared/components/TextField';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
@@ -101,15 +101,8 @@ export function CaptureScreen() {
   const canFile = siteId !== null && (type !== 'planting' || (species.trim() !== '' && Number(quantity) > 0));
 
   return (
-    <Screen>
+    <BrandScreen title="Capture" subtitle="Saved on the phone first">
       <ScrollView contentContainerStyle={{ gap: 20, paddingVertical: 20 }} keyboardShouldPersistTaps="handled">
-        <View style={{ gap: 4 }}>
-          <Text style={{ color: scheme.text, fontSize: 26, fontWeight: '700' }}>Capture</Text>
-          <Text style={{ color: scheme.textMuted, fontSize: 14 }}>
-            Saved on the phone first — it files itself when you have signal.
-          </Text>
-        </View>
-
         <QueueStatus />
 
         <Field label="Site">
@@ -198,7 +191,7 @@ export function CaptureScreen() {
 
         <Button label="Queue this capture" onPress={file} disabled={!canFile} />
       </ScrollView>
-    </Screen>
+    </BrandScreen>
   );
 }
 

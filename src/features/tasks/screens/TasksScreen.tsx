@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { errorMessage } from '@api/client';
-import { Screen } from '@shared/components/Screen';
+import { BrandScreen } from '@shared/components/BrandScreen';
 import { useTheme } from '@theme/useTheme';
 import { decide, fetchInbox, TYPE_LABELS, type ApprovalItem, type ApprovalType } from '../api';
 
@@ -33,18 +33,11 @@ export function TasksScreen() {
   const counts = data?.counts ?? {};
 
   return (
-    <Screen>
+    <BrandScreen title="Tasks" subtitle={counts.total ? `${counts.total} awaiting you` : "Nothing is waiting on you"}>
       <ScrollView
         contentContainerStyle={{ gap: 16, paddingVertical: 20 }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={scheme.textMuted} />}
       >
-        <View style={{ gap: 4 }}>
-          <Text style={{ color: scheme.text, fontSize: 26, fontWeight: '700' }}>Tasks</Text>
-          <Text style={{ color: scheme.textMuted, fontSize: 14 }}>
-            {counts.total ? `${counts.total} awaiting you` : 'Nothing is waiting on you.'}
-          </Text>
-        </View>
-
         {data?.types.length ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             <Chip label="All" count={counts.total ?? 0} selected={filter === null} onPress={() => setFilter(null)} />
@@ -111,7 +104,7 @@ export function TasksScreen() {
           <Text style={{ color: scheme.textMuted, fontSize: 14 }}>Nothing in this queue.</Text>
         ) : null}
       </ScrollView>
-    </Screen>
+    </BrandScreen>
   );
 }
 
