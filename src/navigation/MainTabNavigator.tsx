@@ -21,7 +21,20 @@ const Tab = createBottomTabNavigator();
  * loses entries as data arrives is disorienting. The two views that differ by
  * audience — the delivery pipeline and a contractor's own engagements — live
  * one tap into More rather than swapping places in the bar.
+ *
+ * A tab that holds a stack always returns to the top of it. Coming back to
+ * Rivers four screens deep inside a site, and having to press back four times
+ * to reach the rivers again, makes the tab feel like history rather than a
+ * place — so the tab is the place, and the stack starts over.
  */
+
+/** Land on the tab's first screen, wherever its stack had got to. */
+const resetToRoot = (tab: string, root: string) => ({ navigation }: { navigation: { navigate: (name: string, params: object) => void } }) => ({
+  tabPress: (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+    navigation.navigate(tab, { screen: root });
+  },
+});
 export function MainTabNavigator() {
   const { scheme } = useTheme();
   const can = usePermissions();
@@ -51,6 +64,7 @@ export function MainTabNavigator() {
       <Tab.Screen
         name="Rivers"
         component={RiversNavigator}
+        listeners={resetToRoot('Rivers', 'RiversList')}
         options={{ tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} /> }}
       />
 
@@ -58,6 +72,7 @@ export function MainTabNavigator() {
         <Tab.Screen
           name="Capture"
           component={CaptureNavigator}
+          listeners={resetToRoot('Capture', 'CaptureMenu')}
           options={{ tabBarIcon: ({ color, size }) => <Plus color={color} size={size} /> }}
         />
       ) : null}
@@ -71,6 +86,7 @@ export function MainTabNavigator() {
       <Tab.Screen
         name="More"
         component={MoreNavigator}
+        listeners={resetToRoot('More', 'MoreMenu')}
         options={{ tabBarIcon: ({ color, size }) => <MoreHorizontal color={color} size={size} /> }}
       />
     </Tab.Navigator>
