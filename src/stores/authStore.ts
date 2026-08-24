@@ -33,6 +33,7 @@ type AuthState = {
   passwordChangeRequired: boolean;
 
   restore: () => Promise<void>;
+  hydrate: (user: AuthUser, organisations: Organisation[]) => void;
   signIn: (payload: {
     token: string;
     user: AuthUser;
@@ -57,8 +58,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   restore: async () => {
     // The password never touches storage; only the token the server issued.
     const token = await SecureStore.getItemAsync(TOKEN_KEY);
+
     set({ token, isRestoring: false });
   },
+
+  /** Fill in who the token belongs to, once something has asked the server. */
+  hydrate: (user, organisations) =>
+    set({
+      user,
+      organisations,
+      organisationSlug:
+        organisations.find((organisation) => organisation.is_primary)?.slug ??
+        organisations[0]?.slug ??
+        null,
+    }),
 
   signIn: async ({ token, user, organisations, passwordChangeRequired = false }) => {
     await SecureStore.setItemAsync(TOKEN_KEY, token);

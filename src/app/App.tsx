@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { persister, queryClient } from '@api/queryClient';
 import { RootNavigator } from '@navigation/RootNavigator';
+import { useSession } from '@features/auth/useSession';
 import { useCaptureSync } from '@features/capture/useCaptureSync';
 import { useQueueStore } from '@features/capture/queue';
 import { useAuthStore } from '@stores/authStore';
@@ -21,6 +22,7 @@ void SplashScreen.preventAutoHideAsync();
  */
 function Sync() {
   useCaptureSync();
+  useSession();
 
   return null;
 }
