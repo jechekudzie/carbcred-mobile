@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "CarbCred Africa",
+    "slug": "carbcred-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "africa.carbcred.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photographs of planting, survival checks and anything you report from a site.",
+        "NSPhotoLibraryUsageDescription": "Attach photographs you have already taken to a field submission or a ticket.",
+        "NSLocationWhenInUseUsageDescription": "Record where a field submission or a reported issue was captured.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "africa.carbcred.mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Record where a field submission or a reported issue was captured."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Attach photographs to a field submission or a ticket.",
+          "cameraPermission": "Take photographs of what you are capturing in the field."
+        }
+      ]
+    ],
+    "scheme": "carbcred"
+  }
+}
