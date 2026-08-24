@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
-import { MapPin } from 'lucide-react-native';
+import { Camera, ImagePlus, MapPin, X } from 'lucide-react-native';
 import { Button } from '@shared/components/Button';
 import { BrandScreen } from '@shared/components/BrandScreen';
 import { TextField } from '@shared/components/TextField';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchSites } from '../api';
+import { pickPhoto } from '../photos';
+import type { QueuedFile } from '../types';
 import { QueueStatus } from '../components/QueueStatus';
 import { clientRef } from '../clientRef';
 import { useQueueStore } from '../queue';
@@ -33,6 +35,15 @@ export function CaptureScreen() {
   const [quantity, setQuantity] = useState('');
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [photos, setPhotos] = useState<QueuedFile[]>([]);
+
+  const addPhoto = async (source: 'camera' | 'library') => {
+    const file = await pickPhoto(source);
+
+    if (file) {
+      setPhotos((current) => [...current, file]);
+    }
+  };
 
   const { data: sites, isLoading } = useQuery({
     queryKey: ['sites', organisationSlug],
@@ -68,13 +79,15 @@ export function CaptureScreen() {
 
     // The UUID is minted here, on the phone, before anything touches the
     // network — it is what makes a replayed sync safe.
+    const submissionRef = clientRef();
+
     await enqueue({
       kind: 'field-submission',
       endpoint: '/field-submissions',
       label: `${type} capture`,
       context: site.name,
       payload: {
-        client_ref: clientRef(),
+        client_ref: submissionRef,
         site_id: site.id,
         type,
         latitude: coords?.latitude ?? null,
@@ -93,6 +106,25 @@ export function CaptureScreen() {
       },
     });
 
+    // The photos cannot know their URL yet: the submission they belong to has
+    // not been filed, so it has no id. They queue behind it and the sync fills
+    // {parent} in once it lands.
+    for (const file of photos) {
+      await enqueue({
+        kind: 'photo',
+        endpoint: '/field-submissions/{parent}/photos',
+        dependsOn: submissionRef,
+        file,
+        label: 'Photo',
+        context: site.name,
+        payload: {
+          client_ref: clientRef(),
+          ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
+        },
+      });
+    }
+
+    setPhotos([]);
     setNotes('');
     setSpecies('');
     setQuantity('');
@@ -180,6 +212,67 @@ export function CaptureScreen() {
                   : 'Tap to record coordinates'}
             </Text>
           </Pressable>
+        </Field>
+
+        <Field label="Photographs">
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {photos.map((photo) => (
+              <View key={photo.uri} style={{ position: 'relative' }}>
+                <Image
+                  source={{ uri: photo.uri }}
+                  style={{ width: 72, height: 72, borderRadius: 10 }}
+                />
+                <Pressable
+                  onPress={() => setPhotos((current) => current.filter((item) => item.uri !== photo.uri))}
+                  hitSlop={8}
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -6,
+                    width: 22,
+                    height: 22,
+                    borderRadius: 11,
+                    backgroundColor: scheme.danger,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <X color="#ffffff" size={13} strokeWidth={3} />
+                </Pressable>
+              </View>
+            ))}
+
+            <Pressable
+              onPress={() => addPhoto('camera')}
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: scheme.border,
+                backgroundColor: scheme.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Camera color={scheme.textMuted} size={22} />
+            </Pressable>
+            <Pressable
+              onPress={() => addPhoto('library')}
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: scheme.border,
+                backgroundColor: scheme.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ImagePlus color={scheme.textMuted} size={22} />
+            </Pressable>
+          </View>
         </Field>
 
         <TextField

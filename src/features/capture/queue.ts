@@ -3,9 +3,13 @@ import { create } from 'zustand';
 import type { QueuedWrite } from './types';
 
 const STORAGE_KEY = 'carbcred.capture-queue';
+/** client_ref → the id the server gave the record it created. */
+const CREATED_KEY = 'carbcred.capture-created';
 
 type QueueState = {
   items: QueuedWrite[];
+  /** What each filed write became, so dependents can address themselves. */
+  created: Record<string, number>;
   isHydrated: boolean;
   isDraining: boolean;
 
@@ -14,6 +18,9 @@ type QueueState = {
   markSending: (clientRef: string) => Promise<void>;
   markFailed: (clientRef: string, error: string) => Promise<void>;
   remove: (clientRef: string) => Promise<void>;
+  recordCreated: (clientRef: string, id: number) => Promise<void>;
+  /** The endpoint to send to, or null while its dependency is unresolved. */
+  resolveEndpoint: (write: QueuedWrite) => string | null;
   retry: (clientRef: string) => Promise<void>;
   setDraining: (draining: boolean) => void;
   pending: () => QueuedWrite[];
@@ -39,12 +46,18 @@ export const useQueueStore = create<QueueState>((set, get) => {
 
   return {
     items: [],
+    created: {},
     isHydrated: false,
     isDraining: false,
 
     hydrate: async () => {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      const [raw, createdRaw] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(CREATED_KEY),
+      ]);
       const items: QueuedWrite[] = raw ? JSON.parse(raw) : [];
+
+      set({ created: createdRaw ? JSON.parse(createdRaw) : {} });
 
       // Anything caught mid-flight by a crash goes back to pending: the
       // client_ref makes a re-send safe even if the server did receive it.
@@ -70,6 +83,24 @@ export const useQueueStore = create<QueueState>((set, get) => {
 
     remove: async (clientRef) =>
       persist(get().items.filter((item) => item.payload.client_ref !== clientRef)),
+
+    recordCreated: async (clientRef, id) => {
+      const created = { ...get().created, [clientRef]: id };
+
+      set({ created });
+      await AsyncStorage.setItem(CREATED_KEY, JSON.stringify(created));
+    },
+
+    resolveEndpoint: (write) => {
+      if (!write.endpoint.includes('{parent}')) {
+        return write.endpoint;
+      }
+
+      const parent = write.dependsOn ? get().created[write.dependsOn] : undefined;
+
+      // Its parent has not filed yet; the drain will come back to it.
+      return parent === undefined ? null : write.endpoint.replace('{parent}', String(parent));
+    },
 
     /** Put a failed row back in line — used when the officer fixes the cause. */
     retry: async (clientRef) => patch(clientRef, { status: 'pending', lastError: null }),

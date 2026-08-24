@@ -40,10 +40,23 @@ export function useCaptureSync() {
           }
 
           const ref = item.payload.client_ref;
+          const endpoint = useQueueStore.getState().resolveEndpoint(item);
+
+          // Waiting on something ahead of it in the queue. Skip rather than
+          // fail: the parent is probably one of the items still to send.
+          if (endpoint === null) {
+            continue;
+          }
+
           await useQueueStore.getState().markSending(ref);
 
           try {
-            await send(item);
+            const id = await send(item, endpoint);
+
+            if (id !== null) {
+              await useQueueStore.getState().recordCreated(ref, id);
+            }
+
             // Accepted, or already had it — either way it is filed.
             await useQueueStore.getState().remove(ref);
           } catch (error) {

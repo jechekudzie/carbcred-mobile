@@ -19,13 +19,40 @@ export async function fetchSites(organisationSlug: string): Promise<Site[]> {
 }
 
 /**
- * Send one queued write. Every capture endpoint speaks the same replay
- * contract, so this needs to know nothing about which kind it is holding: a
- * replayed client_ref comes back 200 with the original record, which is success
- * here rather than a duplicate.
+ * Send one queued write to an endpoint the queue has already resolved. Every
+ * capture endpoint speaks the same replay contract, so this needs to know
+ * nothing about which kind it holds: a replayed client_ref comes back 200 with
+ * the original record, which is success here rather than a duplicate.
+ *
+ * Returns the id of the record that now exists, so anything queued behind it
+ * can address itself to it.
  */
-export async function send(write: QueuedWrite): Promise<void> {
-  await api.post(write.endpoint, write.payload);
+export async function send(write: QueuedWrite, endpoint: string): Promise<number | null> {
+  if (write.file) {
+    const form = new FormData();
+
+    for (const [key, value] of Object.entries(write.payload)) {
+      if (value !== null && value !== undefined) {
+        form.append(key, String(value));
+      }
+    }
+
+    // React Native's FormData takes this shape for a file; the cast is the
+    // documented way to satisfy the DOM type it is checked against.
+    form.append('photo', write.file as unknown as Blob);
+
+    const { data } = await api.post<{ data: { id: number } | null }>(endpoint, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      // A photo on a bad line needs longer than a form does.
+      timeout: 90000,
+    });
+
+    return data.data?.id ?? null;
+  }
+
+  const { data } = await api.post<{ data: { id: number } | null }>(endpoint, write.payload);
+
+  return data.data?.id ?? null;
 }
 
 /**

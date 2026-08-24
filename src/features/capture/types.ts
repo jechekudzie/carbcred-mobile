@@ -11,16 +11,31 @@ export type CaptureKind =
   | 'attendance'
   | 'inspection'
   | 'complaint'
-  | 'message';
+  | 'message'
+  | 'photo';
 
 export type SubmissionType = 'planting' | 'survival' | 'monitoring' | 'incident';
 
 export type QueueStatus = 'pending' | 'sending' | 'failed';
 
+/** A file to send as multipart, copied somewhere the queue can still find it. */
+export type QueuedFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
 export type QueuedWrite = {
   kind: CaptureKind;
-  /** Path under /api/v1, resolved when the capture is made, not when it sends. */
+  /**
+   * Path under /api/v1. May contain `{parent}`, which is replaced with the id
+   * of the record `dependsOn` created — a photo is queued before the submission
+   * it belongs to exists, so its endpoint cannot be known until that filed.
+   */
   endpoint: string;
+  /** The client_ref of a queued write that must land before this one can. */
+  dependsOn?: string;
+  file?: QueuedFile;
   payload: Record<string, unknown> & { client_ref: string };
   /** What to call this row in the queue list — the officer's own words for it. */
   label: string;
@@ -38,4 +53,5 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   inspection: 'Inspection',
   complaint: 'Complaint',
   message: 'Message',
+  photo: 'Photo',
 };
