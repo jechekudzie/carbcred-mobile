@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { errorMessage, validationErrors } from '@api/client';
 import { Button } from '@shared/components/Button';
@@ -57,75 +57,91 @@ export function LoginScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: 22, paddingVertical: 40 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 40,
+          }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ gap: 6 }}>
-            <Text style={{ color: scheme.text, fontSize: 30, fontWeight: '700' }}>CarbCred Africa</Text>
-            <Text style={{ color: scheme.textMuted, fontSize: 15 }}>
-              {challenge ? 'Enter your two-factor code to finish signing in.' : 'Sign in to continue.'}
-            </Text>
-          </View>
-
-          {message ? (
-            <View
-              style={{
-                backgroundColor: scheme.surface,
-                borderColor: scheme.border,
-                borderWidth: 1,
-                borderRadius: 12,
-                padding: 14,
-              }}
-            >
-              <Text style={{ color: scheme.text, fontSize: 14 }}>{message}</Text>
-              {challenge?.masked_email ? (
-                <Text style={{ color: scheme.textMuted, fontSize: 13, marginTop: 4 }}>
-                  Sent to {challenge.masked_email}
-                </Text>
-              ) : null}
+          {/* Capped so the form stays a readable column on a tablet rather
+              than stretching the full width of the screen. */}
+          <View style={{ width: '100%', maxWidth: 420, gap: 22 }}>
+            <View style={{ gap: 6, alignItems: 'center' }}>
+              <Image
+                source={require('@assets/mark.png')}
+                style={{ width: 84, height: 84, marginBottom: 8 }}
+                resizeMode="contain"
+              />
+              <Text style={{ color: scheme.text, fontSize: 30, fontWeight: '700', textAlign: 'center' }}>
+                CarbCred Africa
+              </Text>
+              <Text style={{ color: scheme.textMuted, fontSize: 15, textAlign: 'center' }}>
+                {challenge ? 'Enter your two-factor code to finish signing in.' : 'Sign in to continue.'}
+              </Text>
             </View>
-          ) : null}
 
-          {challenge ? (
-            <TextField
-              label="Two-factor code"
-              value={code}
-              onChangeText={setCode}
-              error={firstError('code')}
-              keyboardType="number-pad"
-              autoFocus
-              placeholder="000000"
+            {message ? (
+              <View
+                style={{
+                  backgroundColor: scheme.surface,
+                  borderColor: scheme.border,
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  padding: 14,
+                }}
+              >
+                <Text style={{ color: scheme.text, fontSize: 14 }}>{message}</Text>
+                {challenge?.masked_email ? (
+                  <Text style={{ color: scheme.textMuted, fontSize: 13, marginTop: 4 }}>
+                    Sent to {challenge.masked_email}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+
+            {challenge ? (
+              <TextField
+                label="Two-factor code"
+                value={code}
+                onChangeText={setCode}
+                error={firstError('code')}
+                keyboardType="number-pad"
+                autoFocus
+                placeholder="000000"
+              />
+            ) : (
+              <View style={{ gap: 16 }}>
+                <TextField
+                  label="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  error={firstError('email')}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  placeholder="you@carbcredafrica.co.zw"
+                />
+                <TextField
+                  label="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  error={firstError('password')}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  placeholder="••••••••"
+                />
+              </View>
+            )}
+
+            <Button
+              label={challenge ? 'Verify' : 'Sign in'}
+              onPress={() => mutation.mutate()}
+              loading={mutation.isPending}
+              disabled={challenge ? code.length === 0 : !email || !password}
             />
-          ) : (
-            <View style={{ gap: 16 }}>
-              <TextField
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                error={firstError('email')}
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                placeholder="you@carbcredafrica.co.zw"
-              />
-              <TextField
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                error={firstError('password')}
-                secureTextEntry
-                autoCapitalize="none"
-                placeholder="••••••••"
-              />
-            </View>
-          )}
-
-          <Button
-            label={challenge ? 'Verify' : 'Sign in'}
-            onPress={() => mutation.mutate()}
-            loading={mutation.isPending}
-            disabled={challenge ? code.length === 0 : !email || !password}
-          />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
