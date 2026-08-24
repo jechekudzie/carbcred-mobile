@@ -5,6 +5,13 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  Projects: undefined;
   Capture: undefined;
+  Tasks: undefined;
   More: undefined;
+};
+
+export type ProjectsStackParamList = {
+  ProjectsList: undefined;
+  ProjectDetail: { slug: string; name: string };
 };

@@ -1,8 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, MoreHorizontal, Plus } from 'lucide-react-native';
+import { FolderKanban, Home, ListChecks, MoreHorizontal, Plus } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import { CaptureScreen } from '@features/capture/screens/CaptureScreen';
 import { HomeScreen } from '@features/home/screens/HomeScreen';
+import { TasksScreen } from '@features/tasks/screens/TasksScreen';
+import { ProjectsNavigator } from './ProjectsNavigator';
 import { Screen } from '@shared/components/Screen';
 import { useTheme } from '@theme/useTheme';
 import type { MainTabParamList } from './types';
@@ -41,9 +43,19 @@ export function MainTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
       />
       <Tab.Screen
+        name="Projects"
+        component={ProjectsNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <FolderKanban color={color} size={size} /> }}
+      />
+      <Tab.Screen
         name="Capture"
         component={CaptureScreen}
         options={{ tabBarIcon: ({ color, size }) => <Plus color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Tasks"
+        component={TasksScreen}
+        options={{ tabBarIcon: ({ color, size }) => <ListChecks color={color} size={size} /> }}
       />
       <Tab.Screen
         name="More"

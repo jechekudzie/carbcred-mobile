@@ -9,6 +9,7 @@ import { TextField } from '@shared/components/TextField';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchSites } from '../api';
+import { QueueStatus } from '../components/QueueStatus';
 import { clientRef } from '../clientRef';
 import { useQueueStore } from '../queue';
 import type { SubmissionType } from '../types';
@@ -24,7 +25,6 @@ export function CaptureScreen() {
   const { scheme } = useTheme();
   const organisationSlug = useAuthStore((state) => state.organisationSlug);
   const enqueue = useQueueStore((state) => state.enqueue);
-  const queued = useQueueStore((state) => state.items);
 
   const [siteId, setSiteId] = useState<number | null>(null);
   const [type, setType] = useState<SubmissionType>('planting');
@@ -110,28 +110,7 @@ export function CaptureScreen() {
           </Text>
         </View>
 
-        {queued.length > 0 ? (
-          <View
-            style={{
-              backgroundColor: scheme.surface,
-              borderColor: scheme.border,
-              borderWidth: 1,
-              borderRadius: 12,
-              padding: 12,
-              gap: 6,
-            }}
-          >
-            <Text style={{ color: scheme.text, fontWeight: '600', fontSize: 14 }}>
-              {queued.length} waiting to send
-            </Text>
-            {queued.slice(0, 3).map((item) => (
-              <Text key={item.payload.client_ref} style={{ color: scheme.textMuted, fontSize: 13 }}>
-                {item.payload.type} · {item.siteName}
-                {item.status === 'failed' && item.lastError ? ` — ${item.lastError}` : ''}
-              </Text>
-            ))}
-          </View>
-        ) : null}
+        <QueueStatus />
 
         <Field label="Site">
           {isLoading ? (
