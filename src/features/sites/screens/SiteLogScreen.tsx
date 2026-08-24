@@ -52,6 +52,10 @@ export function SiteLogScreen({ route, navigation }: Props) {
           tonnes_processed: Number(value('tonnes')),
           hours_run: Number(value('hours')),
           ...(value('downtime') ? { downtime_hours: Number(value('downtime')) } : {}),
+          // Without this the server falls back to the plant's registered
+          // rating, and a shift run on different kit reports an efficiency that
+          // never happened.
+          ...(value('rated') ? { rated_capacity_tph: Number(value('rated')) } : {}),
           ...(value('notes') ? { notes: value('notes') } : {}),
         },
       };
@@ -133,6 +137,13 @@ export function SiteLogScreen({ route, navigation }: Props) {
             <TextField label="Tonnes processed" value={value('tonnes')} onChangeText={set('tonnes')} keyboardType="decimal-pad" placeholder="1730" />
             <TextField label="Hours run" value={value('hours')} onChangeText={set('hours')} keyboardType="decimal-pad" placeholder="10" />
             <TextField label="Downtime hours" value={value('downtime')} onChangeText={set('downtime')} keyboardType="decimal-pad" placeholder="0" />
+            <TextField
+              label="Plant rating (t/h)"
+              value={value('rated')}
+              onChangeText={set('rated')}
+              keyboardType="decimal-pad"
+              placeholder="Leave blank to use the plant's registered rating"
+            />
             <TextField label="Notes" value={value('notes')} onChangeText={set('notes')} placeholder="Anything unusual" multiline />
           </>
         ) : null}

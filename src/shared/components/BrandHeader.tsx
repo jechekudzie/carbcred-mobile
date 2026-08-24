@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react-native';
+import { Bell, ChevronLeft } from 'lucide-react-native';
+import { useInboxCount } from '@shared/hooks/useInboxCount';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -31,6 +32,7 @@ export function BrandHeader({
   const { isDark } = useTheme();
   const navigation = useNavigation();
   const canGoBack = navigation.canGoBack();
+  const waiting = useInboxCount();
 
   return (
     <View
@@ -72,11 +74,46 @@ export function BrandHeader({
             <Text style={{ color: brand.leaf, fontSize: 14, fontWeight: '500' }}>{subtitle}</Text>
           ) : null}
         </View>
-        <Image
-          source={require('@assets/mark.png')}
-          style={{ width: 38, height: 38, marginTop: 2 }}
-          resizeMode="contain"
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
+          {/* The bell counts the same inbox the Tasks tab shows, so the two
+              can never disagree about how much is waiting. */}
+          <Pressable
+            onPress={() => navigation.getParent()?.navigate('Tasks' as never)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              waiting > 0 ? `${waiting} waiting for you` : 'Nothing waiting for you'
+            }
+            hitSlop={10}
+          >
+            <Bell color={brand.cream} size={22} />
+            {waiting > 0 ? (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -5,
+                  right: -7,
+                  minWidth: 18,
+                  height: 18,
+                  borderRadius: 9,
+                  paddingHorizontal: 4,
+                  backgroundColor: '#f97066',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: '#ffffff', fontSize: 11, fontWeight: '800' }}>
+                  {waiting > 9 ? '9+' : waiting}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+
+          <Image
+            source={require('@assets/mark.png')}
+            style={{ width: 38, height: 38 }}
+            resizeMode="contain"
+          />
+        </View>
       </View>
 
       {children ? <View style={{ marginTop: 16 }}>{children}</View> : null}
