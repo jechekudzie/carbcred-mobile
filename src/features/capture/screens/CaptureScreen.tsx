@@ -68,8 +68,12 @@ export function CaptureScreen() {
 
     // The UUID is minted here, on the phone, before anything touches the
     // network — it is what makes a replayed sync safe.
-    await enqueue(
-      {
+    await enqueue({
+      kind: 'field-submission',
+      endpoint: '/field-submissions',
+      label: `${type} capture`,
+      context: site.name,
+      payload: {
         client_ref: clientRef(),
         site_id: site.id,
         type,
@@ -87,8 +91,7 @@ export function CaptureScreen() {
             }
           : {}),
       },
-      site.name,
-    );
+    });
 
     setNotes('');
     setSpecies('');

@@ -1,16 +1,14 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react-native';
-import { fetchInbox } from '@features/tasks/api';
+import { fetchInbox, type ApprovalItem } from '@features/tasks/api';
 import { BarChart } from '@shared/components/BarChart';
 import { BrandScreen } from '@shared/components/BrandScreen';
-import { ProportionBar } from '@shared/components/ProportionBar';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
-import { fetchCarbon, fetchDashboard, fetchLeadSitePerformance } from '../api';
+import { fetchDashboard, fetchFocusForContractor, fetchFocusForDelivery } from '../api';
 
-/** The insight's own tone decides its stripe — the API is what ranks urgency. */
 const TONE_COLOURS: Record<string, string> = {
   action: '#f97066',
   warning: '#f5a524',
@@ -24,90 +22,95 @@ export function HomeScreen({ navigation }: { navigation: { navigate: (screen: st
   const user = useAuthStore((state) => state.user);
   const slug = useAuthStore((state) => state.organisationSlug);
   const can = useAuthStore((state) => state.can);
-  const organisation = useAuthStore((state) => state.currentOrganisation)();
+
+  const seesDelivery = can('view-projects');
 
   const dashboard = useQuery({ queryKey: ['dashboard'], queryFn: fetchDashboard });
   const inbox = useQuery({ queryKey: ['approvals', null], queryFn: () => fetchInbox() });
 
-  // Only ask for what this person is allowed to see: a 403 on the home screen
-  // is noise, not information.
-  const carbon = useQuery({
-    queryKey: ['carbon', slug],
-    queryFn: () => fetchCarbon(slug!),
-    enabled: Boolean(slug) && can('view-carbon'),
-  });
-  const performance = useQuery({
-    queryKey: ['lead-performance', slug],
-    queryFn: () => fetchLeadSitePerformance(slug!),
-    enabled: Boolean(slug) && can('view-projects'),
+  const focus = useQuery({
+    queryKey: ['focus', slug, seesDelivery],
+    queryFn: () => (seesDelivery ? fetchFocusForDelivery(slug!) : fetchFocusForContractor(slug!)),
+    enabled: Boolean(slug),
   });
 
-  const refreshing = dashboard.isRefetching || inbox.isRefetching;
-  const refresh = () => {
-    void dashboard.refetch();
-    void inbox.refetch();
-    void carbon.refetch();
-    void performance.refetch();
-  };
+  const project = focus.data;
 
-  const actions = inbox.data?.items ?? [];
-  const bars = (performance.data?.performance ?? []).slice(-10).map((row) => ({
+  // The project's own work, not the organisation's admin. A head-office
+  // requisition is somebody's job, but it is not this project's process.
+  const projectActions = (inbox.data?.items ?? []).filter(
+    (item: ApprovalItem) =>
+      project?.projectId != null && (item.meta.project_id as number | null) === project.projectId,
+  );
+
+  const bars = (project?.performance ?? []).slice(-10).map((row) => ({
     label: row.date.slice(5),
     actual: row.actual,
     expected: row.expected,
   }));
-  const latest = performance.data?.performance.at(-1);
+  const latest = project?.performance.at(-1);
+
+  const refresh = () => {
+    void dashboard.refetch();
+    void inbox.refetch();
+    void focus.refetch();
+  };
 
   return (
     <BrandScreen
       title={user?.name ? `Hello, ${user.name.split(' ')[0]}` : 'Welcome back'}
-      subtitle={organisation?.name ?? 'CarbCred Africa'}
+      subtitle={project?.projectName ?? 'CarbCred Africa'}
       header={
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <HeaderStat label="Projects" value={dashboard.data?.overview.projects ?? 0} />
-          <HeaderStat label="Open tasks" value={dashboard.data?.overview.open_tasks ?? 0} />
-          <HeaderStat label="Awaiting you" value={inbox.data?.counts.total ?? 0} />
+          <HeaderStat
+            label="Phase"
+            value={project?.phases ? `${project.phases.done}/${project.phases.total}` : '—'}
+          />
+          <HeaderStat label="Sites" value={String(project?.siteCount ?? 0)} />
+          <HeaderStat label="On you" value={String(inbox.data?.counts.total ?? 0)} />
         </View>
       }
     >
       <ScrollView
         contentContainerStyle={{ gap: 16, paddingVertical: 18 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={scheme.textMuted} />}
+        refreshControl={
+          <RefreshControl refreshing={dashboard.isRefetching} onRefresh={refresh} tintColor={scheme.textMuted} />
+        }
       >
-        {dashboard.isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
+        {focus.isLoading ? <ActivityIndicator color={scheme.textMuted} style={{ marginTop: 30 }} /> : null}
 
-        {/* Action items first: the things that stop if nobody acts. */}
-        {actions.length > 0 ? (
+        {/* Where the project is in its process. */}
+        {project?.phases ? (
           <Card>
             <CardTitle
-              title="Action items"
-              hint={`${actions.length} awaiting you`}
-              onPress={() => navigation.navigate('Tasks')}
+              title="Process"
+              hint={`${Math.round((project.phases.done / Math.max(project.phases.total, 1)) * 100)}%`}
+              onPress={() => navigation.navigate('Projects')}
             />
-            {actions.slice(0, 3).map((item) => (
-              <View key={`${item.type}-${item.id}`} style={{ gap: 1 }}>
-                <Text style={{ color: scheme.text, fontSize: 15, fontWeight: '600' }}>{item.title}</Text>
-                <Text style={{ color: scheme.textMuted, fontSize: 13 }}>
-                  {item.awaiting}
-                  {item.organisation ? ` · ${item.organisation.name}` : ''}
-                </Text>
-              </View>
-            ))}
-            {actions.length > 3 ? (
-              <Text style={{ color: brand.deepLeaf, fontSize: 13, fontWeight: '600' }}>
-                +{actions.length - 3} more in Tasks
-              </Text>
-            ) : null}
+            <View style={{ height: 8, borderRadius: 4, backgroundColor: scheme.border, overflow: 'hidden' }}>
+              <View
+                style={{
+                  width: `${(project.phases.done / Math.max(project.phases.total, 1)) * 100}%`,
+                  height: 8,
+                  backgroundColor: brand.deepLeaf,
+                }}
+              />
+            </View>
+            <Text style={{ color: scheme.textMuted, fontSize: 14 }}>
+              {project.phases.done} of {project.phases.total} phases complete
+              {project.phases.current ? ` · now on ${project.phases.current}` : ''}
+            </Text>
           </Card>
         ) : null}
 
+        {/* The daily number the operation is judged on. */}
         {bars.length > 0 ? (
           <Card>
-            <CardTitle title="Wash performance" hint={performance.data?.siteName ?? undefined} />
+            <CardTitle title="Daily wash" hint={project?.siteName ?? undefined} />
             <BarChart bars={bars} />
             {latest ? (
-              <View style={{ flexDirection: 'row', gap: 16 }}>
+              <View style={{ flexDirection: 'row', gap: 18 }}>
                 <Metric label="Last day" value={`${latest.actual.toLocaleString()} t`} />
                 <Metric label="Expected" value={latest.expected ? `${latest.expected.toLocaleString()} t` : '—'} />
                 <Metric
@@ -120,17 +123,19 @@ export function HomeScreen({ navigation }: { navigation: { navigate: (screen: st
           </Card>
         ) : null}
 
-        {carbon.data ? (
+        {projectActions.length > 0 ? (
           <Card>
-            <CardTitle title="Carbon" hint="tCO2e" />
-            <ProportionBar
-              unit="t"
-              segments={[
-                { label: 'Verified', value: carbon.data.summary.net_verified, colour: brand.deepLeaf },
-                { label: 'Estimated', value: carbon.data.summary.net_estimated, colour: brand.leaf },
-                { label: 'Credits issued', value: carbon.data.summary.credits_issued, colour: '#7c9a3f' },
-              ]}
+            <CardTitle
+              title="Action items"
+              hint={`${projectActions.length} on this project`}
+              onPress={() => navigation.navigate('Tasks')}
             />
+            {projectActions.slice(0, 4).map((item) => (
+              <View key={`${item.type}-${item.id}`} style={{ gap: 1 }}>
+                <Text style={{ color: scheme.text, fontSize: 15, fontWeight: '600' }}>{item.title}</Text>
+                <Text style={{ color: scheme.textMuted, fontSize: 13 }}>{item.awaiting}</Text>
+              </View>
+            ))}
           </Card>
         ) : null}
 
@@ -215,7 +220,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: s
   );
 }
 
-function HeaderStat({ label, value }: { label: string; value: number }) {
+function HeaderStat({ label, value }: { label: string; value: string }) {
   return (
     <View
       style={{

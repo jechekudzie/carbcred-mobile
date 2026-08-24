@@ -1,58 +1,109 @@
 import { api } from '@api/client';
+import { fetchEngagements } from '@features/engagements/api';
+import { fetchProject, fetchProjects, type ProjectDetail } from '@features/projects/api';
 
 export type Dashboard = {
-  stats: { organisations: number; members: number; modules: number };
   overview: {
     programmes: number;
     projects: number;
     active_workflows: number;
     open_tasks: number;
     open_requisitions: number;
-    approved_spend: number;
   };
   insights: { tone: string; title: string; body: string; href: string | null }[];
   tip: { title: string; body: string };
 };
 
-export type CarbonSummary = {
-  summary: { net_verified: number; net_estimated: number; credits_issued: number };
-};
-
 export type Performance = { date: string; actual: number; expected: number | null; efficiency: number | null };
+
+/**
+ * What the home screen is about: one project, the process it is in, and the
+ * site that is running.
+ *
+ * Which project depends on who is asking. The CarbCred team sees the delivery
+ * pipeline, so it is the organisation's active project with its workflow. A
+ * contractor sees only what it is engaged on and operates — no workflow, since
+ * the lead organisation's pipeline is not its business.
+ */
+export type Focus = {
+  projectName: string;
+  projectSlug: string | null;
+  projectId: number | null;
+  phases: { done: number; total: number; current: string | null } | null;
+  siteName: string | null;
+  siteCount: number;
+  performance: Performance[];
+};
 
 export async function fetchDashboard(): Promise<Dashboard> {
   return (await api.get<{ data: Dashboard }>('/dashboard')).data.data;
 }
 
-export async function fetchCarbon(organisationSlug: string): Promise<CarbonSummary> {
-  return (await api.get<{ data: CarbonSummary }>(`/organisations/${organisationSlug}/carbon-summary`)).data.data;
-}
+export async function fetchFocusForDelivery(organisationSlug: string): Promise<Focus | null> {
+  const projects = await fetchProjects(organisationSlug);
+  const project = projects.find((candidate) => candidate.status === 'active') ?? projects[0];
 
-/**
- * The wash performance of the site that is actually running. Two calls, because
- * the readings live on the site rather than on the dashboard — worth it, since
- * expected-against-actual is the number the operation is judged on daily.
- */
-export async function fetchLeadSitePerformance(
-  organisationSlug: string,
-): Promise<{ siteName: string; performance: Performance[] } | null> {
-  const sites = (
-    await api.get<{ data: { id: number; name: string; project_id: number | null }[] }>(
-      `/organisations/${organisationSlug}/sites`,
-    )
-  ).data.data;
-
-  const operating = sites.find((site) => site.project_id !== null) ?? sites[0];
-
-  if (!operating) {
+  if (!project) {
     return null;
   }
 
-  const detail = (
-    await api.get<{ data: { name: string; operations: { performance: Performance[] } } }>(
-      `/organisations/${organisationSlug}/sites/${operating.id}`,
-    )
-  ).data.data;
+  const detail: ProjectDetail = await fetchProject(organisationSlug, project.slug);
+  const site = detail.sites[0] ?? null;
+  const performance = site ? await fetchSitePerformance(organisationSlug, site.id) : [];
 
-  return { siteName: detail.name, performance: detail.operations.performance ?? [] };
+  return {
+    projectName: detail.name,
+    projectSlug: detail.slug,
+    projectId: detail.id,
+    phases: detail.workflow
+      ? {
+          done: detail.workflow.phases.filter((phase) => phase.status === 'completed').length,
+          total: detail.workflow.phases.length,
+          current:
+            detail.workflow.phases.find((phase) => phase.status === 'in_progress')?.name ??
+            detail.workflow.phases.find((phase) => phase.status === 'pending')?.name ??
+            null,
+        }
+      : null,
+    siteName: site?.name ?? null,
+    siteCount: detail.sites.length,
+    performance,
+  };
+}
+
+export async function fetchFocusForContractor(organisationSlug: string): Promise<Focus | null> {
+  const engagements = await fetchEngagements(organisationSlug);
+  const engagement = engagements[0];
+
+  if (!engagement) {
+    return null;
+  }
+
+  const site = engagement.sites[0] ?? null;
+
+  return {
+    projectName: engagement.name,
+    projectSlug: null,
+    projectId: engagement.id,
+    // A contractor does not see the lead's workflow.
+    phases: null,
+    siteName: site?.name ?? null,
+    siteCount: engagement.sites.length,
+    performance: [...(site?.recent ?? [])]
+      .reverse()
+      .map((reading) => ({
+        date: reading.reading_date,
+        actual: reading.tonnes_processed,
+        expected: null,
+        efficiency: reading.throughput_efficiency,
+      })),
+  };
+}
+
+async function fetchSitePerformance(organisationSlug: string, siteId: number): Promise<Performance[]> {
+  const { data } = await api.get<{ data: { operations: { performance: Performance[] } } }>(
+    `/organisations/${organisationSlug}/sites/${siteId}`,
+  );
+
+  return data.data.operations.performance ?? [];
 }

@@ -10,10 +10,22 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Projects: undefined;
+  Sites: undefined;
   Engagements: undefined;
   Capture: undefined;
   Tasks: undefined;
   More: undefined;
+};
+
+export type SitesStackParamList = {
+  SitesList: undefined;
+  SiteDetail: { siteId: number; name: string };
+};
+
+export type CaptureStackParamList = {
+  CaptureMenu: undefined;
+  DailyWash: undefined;
+  FieldSubmission: undefined;
 };
 
 export type MoreStackParamList = {

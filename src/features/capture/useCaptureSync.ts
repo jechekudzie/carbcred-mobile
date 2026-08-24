@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { onlineManager } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
-import { errorMessage, isPermanentFailure, submitCapture } from './api';
+import { errorMessage, isPermanentFailure, send } from './api';
 import { useQueueStore } from './queue';
 
 /**
@@ -43,7 +43,7 @@ export function useCaptureSync() {
           await useQueueStore.getState().markSending(ref);
 
           try {
-            await submitCapture(item.payload);
+            await send(item);
             // Accepted, or already had it — either way it is filed.
             await useQueueStore.getState().remove(ref);
           } catch (error) {
@@ -60,7 +60,8 @@ export function useCaptureSync() {
           }
         }
 
-        await queryClient.invalidateQueries({ queryKey: ['field-submissions'] });
+        // Anything the queue filed may have moved a number on screen.
+        await queryClient.invalidateQueries();
       } finally {
         useQueueStore.getState().setDraining(false);
       }

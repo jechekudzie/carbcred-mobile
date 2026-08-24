@@ -1,0 +1,74 @@
+import { api } from '@api/client';
+
+export type SiteRow = {
+  id: number;
+  code: string;
+  name: string;
+  status: string;
+  river: string | null;
+  province: string | null;
+  project: string | null;
+  operator: string | null;
+  project_id: number | null;
+};
+
+export type Mobilization = {
+  started_on: string | null;
+  machinery_ready_on: string | null;
+  washplant_ready_on: string | null;
+  setup_completed_on: string | null;
+  running_since: string | null;
+  stage: string;
+  required_guards: number;
+  notes: string | null;
+};
+
+export type SiteOperations = {
+  mobilization: Mobilization | null;
+  guards: { id: number; name: string; phone: string | null; stage: string; deployed_on: string }[];
+  attendance: { id: number; attended_on: string; name: string; role: string }[];
+  performance: { date: string; actual: number; expected: number | null; efficiency: number | null }[];
+  rated_tph: number | null;
+  inspections: {
+    id: number;
+    agency: string;
+    inspected_on: string;
+    inspector: string | null;
+    outcome: string;
+    findings: string | null;
+    follow_up: string | null;
+    follow_up_due: string | null;
+  }[];
+  complaints: { id: number; reference: string; status: string; severity: string; description: string; received_on: string }[];
+  open_complaints: number;
+  representatives: { id: number; name: string; designation: string; body: string | null; kind: string | null }[];
+};
+
+export type SiteDetail = SiteRow & {
+  latitude: number | null;
+  longitude: number | null;
+  area_hectares: number | null;
+  length_km: number | null;
+  permits: { id: number; type: string; reference: string | null; issuing_authority: string | null; expires_on: string | null }[];
+  equipment: { id: number; type: string; label: string | null; rating: number | null; unit: string | null; quantity: number }[];
+  operations: SiteOperations;
+  verify_url: string;
+};
+
+export async function fetchSites(organisationSlug: string): Promise<SiteRow[]> {
+  return (await api.get<{ data: SiteRow[] }>(`/organisations/${organisationSlug}/sites`)).data.data;
+}
+
+/** Everything about one site in a single call — the whole operations picture. */
+export async function fetchSite(organisationSlug: string, siteId: number): Promise<SiteDetail> {
+  return (await api.get<{ data: SiteDetail }>(`/organisations/${organisationSlug}/sites/${siteId}`)).data.data;
+}
+
+/** The five mobilization stamps, in the order they are meant to happen. */
+export const MOBILIZATION_STEPS: { key: keyof Mobilization; label: string }[] = [
+  { key: 'started_on', label: 'Mobilization started' },
+  { key: 'machinery_ready_on', label: 'Machinery on site' },
+  { key: 'washplant_ready_on', label: 'Wash plant ready' },
+  { key: 'setup_completed_on', label: 'Set-up complete' },
+  { key: 'running_since', label: 'Running' },
+];

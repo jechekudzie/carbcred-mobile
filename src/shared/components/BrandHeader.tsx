@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -12,6 +14,9 @@ import { useTheme } from '@theme/useTheme';
  * header does not. Flat colour, no gradients or overlays: the leaf stripe along
  * the bottom is the second brand colour doing the work of a divider, and the
  * mark sits top-right where it does not compete with the screen's title.
+ *
+ * Back lives here rather than on each screen: any screen pushed onto a stack
+ * can go back, so the band asks the navigator instead of being told.
  */
 export function BrandHeader({
   title,
@@ -24,6 +29,8 @@ export function BrandHeader({
 }) {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const navigation = useNavigation();
+  const canGoBack = navigation.canGoBack();
 
   return (
     <View
@@ -38,7 +45,27 @@ export function BrandHeader({
         borderBottomColor: brand.leaf,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+        {canGoBack ? (
+          <Pressable
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            // Generous target: this is tapped with gloves on and one hand.
+            hitSlop={12}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(250, 247, 241, 0.12)',
+              marginLeft: -4,
+            }}
+          >
+            <ChevronLeft color={brand.cream} size={24} />
+          </Pressable>
+        ) : null}
         <View style={{ flex: 1, gap: 3 }}>
           <Text style={{ color: brand.cream, fontSize: 26, fontWeight: '700' }}>{title}</Text>
           {subtitle ? (

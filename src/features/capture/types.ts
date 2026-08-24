@@ -1,32 +1,39 @@
-/** The capture kinds the platform accepts; the API is the authority on this. */
-export type SubmissionType = 'planting' | 'survival' | 'monitoring' | 'incident';
+/**
+ * Everything the app can file from the field.
+ *
+ * Each kind names the endpoint it posts to and carries its own payload; the
+ * queue and the sync engine treat them all alike, so adding a capture is a
+ * matter of describing it rather than of writing another send path.
+ */
+export type CaptureKind =
+  | 'field-submission'
+  | 'wash-reading'
+  | 'attendance'
+  | 'inspection'
+  | 'complaint';
 
-/** What the phone sends. `client_ref` is generated here, before anything else. */
-export type FieldSubmissionPayload = {
-  client_ref: string;
-  site_id: number;
-  type: SubmissionType;
-  latitude?: number | null;
-  longitude?: number | null;
-  notes?: string | null;
-  captured_at?: string;
-  planting?: {
-    species: string;
-    quantity: number;
-    area_hectares?: number | null;
-    planted_on: string;
-  };
-};
+export type SubmissionType = 'planting' | 'survival' | 'monitoring' | 'incident';
 
 export type QueueStatus = 'pending' | 'sending' | 'failed';
 
-export type QueuedCapture = {
-  payload: FieldSubmissionPayload;
+export type QueuedWrite = {
+  kind: CaptureKind;
+  /** Path under /api/v1, resolved when the capture is made, not when it sends. */
+  endpoint: string;
+  payload: Record<string, unknown> & { client_ref: string };
+  /** What to call this row in the queue list — the officer's own words for it. */
+  label: string;
+  context: string;
   status: QueueStatus;
   attempts: number;
-  /** The last thing the server said, kept so the officer knows why it stuck. */
   lastError: string | null;
   queuedAt: string;
-  /** Set once the server has accepted it — the row is then dropped. */
-  siteName: string;
+};
+
+export const KIND_LABELS: Record<CaptureKind, string> = {
+  'field-submission': 'Field submission',
+  'wash-reading': 'Wash reading',
+  attendance: 'Attendance',
+  inspection: 'Inspection',
+  complaint: 'Complaint',
 };

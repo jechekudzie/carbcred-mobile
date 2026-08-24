@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FolderKanban, HardHat, Home, ListChecks, MoreHorizontal, Plus } from 'lucide-react-native';
-import { CaptureScreen } from '@features/capture/screens/CaptureScreen';
+import { FolderKanban, HardHat, Home, ListChecks, MapPin, MoreHorizontal, Plus } from 'lucide-react-native';
+import { CaptureNavigator } from './CaptureNavigator';
 import { EngagementsScreen } from '@features/engagements/screens/EngagementsScreen';
 import { HomeScreen } from '@features/home/screens/HomeScreen';
 import { TasksScreen } from '@features/tasks/screens/TasksScreen';
@@ -8,6 +8,7 @@ import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
 import { MoreNavigator } from './MoreNavigator';
+import { SitesNavigator } from './SitesNavigator';
 import { ProjectsNavigator } from './ProjectsNavigator';
 
 const Tab = createBottomTabNavigator();
@@ -28,7 +29,7 @@ export function MainTabNavigator() {
 
   const seesDelivery = can('view-projects');
   const seesEngagements = can('view-contractors');
-  const capturesField = can('create-field') || can('edit-field');
+  const captures = can('create-field') || can('edit-field') || can('edit-contractors') || can('edit-projects');
 
   return (
     <Tab.Navigator
@@ -49,6 +50,7 @@ export function MainTabNavigator() {
         options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
       />
 
+      {/* Delivery sees the pipeline; a contractor sees only its own engagements. */}
       {seesDelivery ? (
         <Tab.Screen
           name="Projects"
@@ -57,7 +59,6 @@ export function MainTabNavigator() {
         />
       ) : null}
 
-      {/* A contractor's own engagements, only when delivery is not already shown. */}
       {seesEngagements && !seesDelivery ? (
         <Tab.Screen
           name="Engagements"
@@ -69,10 +70,16 @@ export function MainTabNavigator() {
         />
       ) : null}
 
-      {capturesField ? (
+      <Tab.Screen
+        name="Sites"
+        component={SitesNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <MapPin color={color} size={size} /> }}
+      />
+
+      {captures ? (
         <Tab.Screen
           name="Capture"
-          component={CaptureScreen}
+          component={CaptureNavigator}
           options={{ tabBarIcon: ({ color, size }) => <Plus color={color} size={size} /> }}
         />
       ) : null}

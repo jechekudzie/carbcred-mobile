@@ -1,5 +1,5 @@
 import { api, errorMessage } from '@api/client';
-import type { FieldSubmissionPayload } from './types';
+import type { QueuedWrite } from './types';
 
 export type Site = {
   id: number;
@@ -8,6 +8,7 @@ export type Site = {
   status: string;
   river: string | null;
   province: string | null;
+  project_id: number | null;
 };
 
 /** The sites this organisation can capture against. */
@@ -17,23 +18,14 @@ export async function fetchSites(organisationSlug: string): Promise<Site[]> {
   return data.data;
 }
 
-export type SubmitResult = {
-  /** True when the server had already filed this client_ref. */
-  replayed: boolean;
-  id: number | null;
-};
-
 /**
- * File one capture. A replayed `client_ref` comes back `200 {replayed: true}`
- * with the original record, which is a success here, not a duplicate.
+ * Send one queued write. Every capture endpoint speaks the same replay
+ * contract, so this needs to know nothing about which kind it is holding: a
+ * replayed client_ref comes back 200 with the original record, which is success
+ * here rather than a duplicate.
  */
-export async function submitCapture(payload: FieldSubmissionPayload): Promise<SubmitResult> {
-  const { data } = await api.post<{ data: { id: number } | null; replayed: boolean }>(
-    '/field-submissions',
-    payload,
-  );
-
-  return { replayed: data.replayed, id: data.data?.id ?? null };
+export async function send(write: QueuedWrite): Promise<void> {
+  await api.post(write.endpoint, write.payload);
 }
 
 /**
