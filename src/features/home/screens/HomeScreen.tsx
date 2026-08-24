@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react-native';
 import { fetchInbox, type ApprovalItem } from '@features/tasks/api';
 import { BarChart } from '@shared/components/BarChart';
 import { BrandScreen } from '@shared/components/BrandScreen';
+import { usePermissions } from '@shared/hooks/usePermissions';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -21,7 +22,7 @@ export function HomeScreen({ navigation }: { navigation: { navigate: (screen: st
   const { scheme } = useTheme();
   const user = useAuthStore((state) => state.user);
   const slug = useAuthStore((state) => state.organisationSlug);
-  const can = useAuthStore((state) => state.can);
+  const can = usePermissions();
 
   const seesDelivery = can('view-projects');
 

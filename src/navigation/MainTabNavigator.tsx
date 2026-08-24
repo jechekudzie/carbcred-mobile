@@ -4,6 +4,7 @@ import { CaptureNavigator } from './CaptureNavigator';
 import { EngagementsScreen } from '@features/engagements/screens/EngagementsScreen';
 import { HomeScreen } from '@features/home/screens/HomeScreen';
 import { TasksScreen } from '@features/tasks/screens/TasksScreen';
+import { usePermissions } from '@shared/hooks/usePermissions';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -25,7 +26,7 @@ const Tab = createBottomTabNavigator();
  */
 export function MainTabNavigator() {
   const { scheme } = useTheme();
-  const can = useAuthStore((state) => state.can);
+  const can = usePermissions();
 
   const seesDelivery = can('view-projects');
   const seesEngagements = can('view-contractors');

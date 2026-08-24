@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { logout } from '@features/auth/api';
 import { BrandScreen } from '@shared/components/BrandScreen';
 import type { MoreStackParamList } from '@navigation/types';
+import { usePermissions } from '@shared/hooks/usePermissions';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -15,7 +16,7 @@ export function MoreScreen({ navigation }: Props) {
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const organisation = useAuthStore((state) => state.currentOrganisation)();
-  const can = useAuthStore((state) => state.can);
+  const can = usePermissions();
   // Both jobs at once: the tab shows delivery, so engagements live here.
   const canSeeEngagements = can('view-contractors') && can('view-projects');
 

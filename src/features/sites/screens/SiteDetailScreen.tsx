@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BarChart } from '@shared/components/BarChart';
 import { BrandScreen } from '@shared/components/BrandScreen';
 import type { RiversStackParamList } from '@navigation/types';
+import { usePermissions } from '@shared/hooks/usePermissions';
 import { useAuthStore } from '@stores/authStore';
 import { brand } from '@theme/colors';
 import { useTheme } from '@theme/useTheme';
@@ -29,7 +30,7 @@ export function SiteDetailScreen({ route, navigation }: Props) {
   const { scheme } = useTheme();
   const slug = useAuthStore((state) => state.organisationSlug);
   const { siteId, name } = route.params;
-  const can = useAuthStore((state) => state.can);
+  const can = usePermissions();
   const canLog = can('edit-projects') || can('edit-contractors') || can('edit-field');
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
