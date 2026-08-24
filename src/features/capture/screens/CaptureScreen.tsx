@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
-import * as Crypto from 'expo-crypto';
 import * as Location from 'expo-location';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react-native';
@@ -10,6 +9,7 @@ import { TextField } from '@shared/components/TextField';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
 import { fetchSites } from '../api';
+import { clientRef } from '../clientRef';
 import { useQueueStore } from '../queue';
 import type { SubmissionType } from '../types';
 
@@ -70,7 +70,7 @@ export function CaptureScreen() {
     // network — it is what makes a replayed sync safe.
     await enqueue(
       {
-        client_ref: Crypto.randomUUID(),
+        client_ref: clientRef(),
         site_id: site.id,
         type,
         latitude: coords?.latitude ?? null,
