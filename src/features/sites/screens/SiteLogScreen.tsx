@@ -52,9 +52,10 @@ export function SiteLogScreen({ route, navigation }: Props) {
           tonnes_processed: Number(value('tonnes')),
           hours_run: Number(value('hours')),
           ...(value('downtime') ? { downtime_hours: Number(value('downtime')) } : {}),
-          // Without this the server falls back to the plant's registered
-          // rating, and a shift run on different kit reports an efficiency that
-          // never happened.
+          // The server falls back to the plant's registered rating when a
+          // reading does not carry its own. That is right most days; it is
+          // wrong on a shift run on hired or partial kit, which is the only
+          // reason this field exists.
           ...(value('rated') ? { rated_capacity_tph: Number(value('rated')) } : {}),
           ...(value('notes') ? { notes: value('notes') } : {}),
         },
