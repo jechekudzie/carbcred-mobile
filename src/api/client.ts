@@ -26,7 +26,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Sign out only when the server rejected a token we actually sent.
+    //
+    // A blanket sign-out on any 401 destroys the stored session for reasons
+    // that have nothing to do with the token being bad — a request made before
+    // the session was restored, or one to an endpoint that needs no token at
+    // all. The token is deleted from the keystore and cannot be recovered, so
+    // this has to be certain rather than cautious.
+    const sentToken = Boolean(error.config?.headers?.Authorization);
+
+    if (error.response?.status === 401 && sentToken) {
       void useAuthStore.getState().signOut();
     }
 
