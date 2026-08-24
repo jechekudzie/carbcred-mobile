@@ -6,7 +6,7 @@ import { Screen } from '@shared/components/Screen';
 import type { ProjectsStackParamList } from '@navigation/types';
 import { useAuthStore } from '@stores/authStore';
 import { useTheme } from '@theme/useTheme';
-import { fetchProject, phaseProgress, type WorkflowPhase, type WorkflowTask } from '../api';
+import { fetchProject, phaseProgress, type Workflow, type WorkflowPhase, type WorkflowTask } from '../api';
 
 type Props = NativeStackScreenProps<ProjectsStackParamList, 'ProjectDetail'>;
 
@@ -63,7 +63,7 @@ export function ProjectDetailScreen({ route }: Props) {
 
             <View style={{ gap: 10 }}>
               {data.workflow.phases.map((phase) => (
-                <Phase key={phase.id} phase={phase} />
+                <Phase key={phase.id} phase={phase} expanded={phase.id === openPhaseId(data.workflow)} />
               ))}
             </View>
           </>
@@ -77,15 +77,28 @@ export function ProjectDetailScreen({ route }: Props) {
   );
 }
 
-function Phase({ phase }: { phase: WorkflowPhase }) {
+/**
+ * Which phase to open. The live phase, when it still has work in it — but a
+ * phase can be in progress with everything in it already approved, waiting on an
+ * approval rather than on a person. In that case the next real work is in the
+ * phase after it, and showing an empty box would answer nothing.
+ */
+function openPhaseId(workflow: Workflow | null): number | null {
+  const withWork = (workflow?.phases ?? []).filter((phase) => outstandingIn(phase).length > 0);
+  const live = withWork.find((phase) => phase.status === 'in_progress');
+
+  return (live ?? withWork[0])?.id ?? null;
+}
+
+function outstandingIn(phase: WorkflowPhase): WorkflowTask[] {
+  return phase.stages.flatMap((stage) => stage.tasks).filter((task) => task.status !== 'approved');
+}
+
+function Phase({ phase, expanded }: { phase: WorkflowPhase; expanded: boolean }) {
   const { scheme } = useTheme();
   const done = phase.status === 'completed';
   const active = phase.status === 'in_progress';
-
-  // Only the live phase opens: a finished phase is history, and one that has
-  // not started is not yet anybody's problem.
-  const tasks: WorkflowTask[] = active ? phase.stages.flatMap((stage) => stage.tasks) : [];
-  const outstanding = tasks.filter((task) => task.status !== 'approved');
+  const outstanding = expanded ? outstandingIn(phase) : [];
 
   return (
     <View
@@ -116,11 +129,16 @@ function Phase({ phase }: { phase: WorkflowPhase }) {
           >
             {phase.name}
           </Text>
-          <Text style={{ color: scheme.textMuted, fontSize: 13 }}>{phase.status_label}</Text>
+          <Text style={{ color: scheme.textMuted, fontSize: 13 }}>
+            {phase.status_label}
+            {!expanded && outstandingIn(phase).length > 0
+              ? ` · ${outstandingIn(phase).length} to do`
+              : ''}
+          </Text>
         </View>
       </View>
 
-      {active && outstanding.length > 0 ? (
+      {outstanding.length > 0 ? (
         <View style={{ gap: 6, paddingLeft: 28 }}>
           {outstanding.map((task) => (
             <View key={task.id} style={{ gap: 1 }}>
