@@ -19,7 +19,10 @@ export const queryClient = new QueryClient({
     queries: {
       // Field work happens on bad signal: keep what we have, retry patiently.
       staleTime: 60 * 1000,
-      gcTime: 24 * 60 * 60 * 1000,
+      // A trip to a river is measured in days, not hours. Anything fetched
+      // stays readable for a week, because the alternative offline is a blank
+      // screen where the answer used to be.
+      gcTime: 7 * 24 * 60 * 60 * 1000,
       retry: 2,
       refetchOnReconnect: true,
     },
@@ -34,4 +37,11 @@ export const queryClient = new QueryClient({
 export const persister = createAsyncStoragePersister({
   storage: AsyncStorage,
   key: 'carbcred.query-cache',
+  // The persister discards anything older than this on restore; without it the
+  // default throws away a week-old cache after a day, which is the opposite of
+  // what someone in a valley needs.
+  throttleTime: 2000,
 });
+
+/** How long a restored cache stays usable. Matches gcTime deliberately. */
+export const CACHE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;

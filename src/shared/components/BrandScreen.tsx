@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useTheme } from '@theme/useTheme';
 import { BrandHeader } from './BrandHeader';
+import { OfflineBanner } from './OfflineBanner';
 
 /**
  * A screen that opens on the green band. The band owns the top inset itself, so
@@ -25,6 +26,7 @@ export function BrandScreen({
       <BrandHeader title={title} subtitle={subtitle}>
         {header}
       </BrandHeader>
+      <OfflineBanner />
       <View style={{ flex: 1, paddingHorizontal: 20 }}>{children}</View>
     </View>
   );

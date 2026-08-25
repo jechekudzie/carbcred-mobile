@@ -4,9 +4,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { persister, queryClient } from '@api/queryClient';
+import { CACHE_MAX_AGE, persister, queryClient } from '@api/queryClient';
 import { RootNavigator } from '@navigation/RootNavigator';
 import { useSession } from '@features/auth/useSession';
+import { useWarmCache } from '@shared/hooks/useWarmCache';
 import { useCaptureSync } from '@features/capture/useCaptureSync';
 import { useQueueStore } from '@features/capture/queue';
 import { useAuthStore } from '@stores/authStore';
@@ -23,6 +24,7 @@ void SplashScreen.preventAutoHideAsync();
 function Sync() {
   useCaptureSync();
   useSession();
+  useWarmCache();
 
   return null;
 }
@@ -52,7 +54,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: CACHE_MAX_AGE }}>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <Sync />
           <RootNavigator />
